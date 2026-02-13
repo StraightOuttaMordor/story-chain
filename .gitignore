@@ -4,3 +4,6 @@ test-ledger/
 app/node_modules/
 app/dist/
 .anchor/
+
+# Local Netlify folder
+.netlify

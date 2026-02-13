@@ -319,10 +319,8 @@ async function mintNode() {
       const tx = await program.methods
         .createRoot(title, contentUri, titleSeedArg(title))
         .accounts({
-          storyNode: storyNodePda,
           author: authorPk,
-          systemProgram: web3.SystemProgram.programId,
-        })
+        } as any)
         .rpc();
 
       setStatus(`✅ Root node minted! TX: ${shortenAddr(tx)}`, "success");
@@ -342,11 +340,9 @@ async function mintNode() {
       const tx = await program.methods
         .createBranch(title, contentUri, titleSeedArg(title))
         .accounts({
-          storyNode: branchPda,
           parentNode: parentPk,
           author: authorPk,
-          systemProgram: web3.SystemProgram.programId,
-        })
+        } as any)
         .rpc();
 
       setStatus(`✅ Branch minted! TX: ${shortenAddr(tx)}`, "success");
