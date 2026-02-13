@@ -14,9 +14,9 @@ import { createHash } from "crypto";
 
 // --- Config ---
 const PROGRAM_ID = new PublicKey(idl.address);
-// Default to localhost; switch to devnet when deployed
-const NETWORK = "http://localhost:8899";
-// const NETWORK = clusterApiUrl("devnet");
+// Devnet for production, localhost for local dev
+const NETWORK = clusterApiUrl("devnet");
+// const NETWORK = "http://localhost:8899";
 
 // --- Types ---
 interface StoryNodeData {
