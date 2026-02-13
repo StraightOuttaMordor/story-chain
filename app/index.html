@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Story Chain — Solana Branching Narratives</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>📖 Story Chain</h1>
+        <p class="subtitle">Permissionless branching narratives on Solana</p>
+        <div id="wallet-section">
+          <button id="connect-btn">Connect Wallet</button>
+          <span id="wallet-address"></span>
+        </div>
+      </header>
+
+      <main>
+        <!-- Mint Section -->
+        <section id="mint-section" class="card hidden">
+          <h2>✍️ Create a Story Node</h2>
+          <div class="form-group">
+            <label for="node-type">Type</label>
+            <select id="node-type">
+              <option value="root">New Story (Root)</option>
+              <option value="branch">Branch from Existing</option>
+            </select>
+          </div>
+          <div id="parent-field" class="form-group hidden">
+            <label for="parent-address">Parent Node Address</label>
+            <input type="text" id="parent-address" placeholder="Paste parent node pubkey..." />
+          </div>
+          <div class="form-group">
+            <label for="title-input">Title</label>
+            <input type="text" id="title-input" placeholder="The Dark Forest" maxlength="64" />
+            <span class="char-count"><span id="char-count">0</span>/64</span>
+          </div>
+          <div class="form-group">
+            <label for="content-input">Story Content</label>
+            <textarea id="content-input" rows="6" placeholder="Write your story passage here..."></textarea>
+          </div>
+          <button id="mint-btn" class="primary">Mint Story Node</button>
+          <div id="mint-status" class="status"></div>
+        </section>
+
+        <!-- Browse Section -->
+        <section id="browse-section" class="card">
+          <h2>🌲 Story Graph</h2>
+          <div id="stories-loading" class="loading">Connect wallet to browse stories...</div>
+          <div id="stories-list"></div>
+        </section>
+
+        <!-- Node Detail -->
+        <section id="node-detail" class="card hidden">
+          <button id="back-btn">← Back to Graph</button>
+          <div id="node-content"></div>
+          <div id="node-branches">
+            <h3>Branches</h3>
+            <div id="branches-list"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>Built on Solana • V1 — Devnet</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

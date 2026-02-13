@@ -1,0 +1,274 @@
+{
+  "address": "Eun9Ca5x4CGTZ53XC5ie8GidJBAgFhkr7gYwvx5qLcKq",
+  "metadata": {
+    "name": "story_chain",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "create_branch",
+      "docs": [
+        "Branch off an existing story node, creating a new child node."
+      ],
+      "discriminator": [
+        78,
+        225,
+        107,
+        25,
+        194,
+        2,
+        140,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "story_node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  114,
+                  121,
+                  45,
+                  110,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              },
+              {
+                "kind": "account",
+                "path": "parent_node"
+              },
+              {
+                "kind": "arg",
+                "path": "title_seed"
+              }
+            ]
+          }
+        },
+        {
+          "name": "parent_node",
+          "writable": true
+        },
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "content_uri",
+          "type": "string"
+        },
+        {
+          "name": "title_seed",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_root",
+      "docs": [
+        "Create a brand new story (root node with no parent)."
+      ],
+      "discriminator": [
+        115,
+        195,
+        96,
+        208,
+        249,
+        205,
+        56,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "story_node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  114,
+                  121,
+                  45,
+                  110,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              },
+              {
+                "kind": "arg",
+                "path": "title_seed"
+              }
+            ]
+          }
+        },
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "content_uri",
+          "type": "string"
+        },
+        {
+          "name": "title_seed",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "StoryNode",
+      "discriminator": [
+        81,
+        76,
+        245,
+        170,
+        43,
+        108,
+        134,
+        24
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TitleTooLong",
+      "msg": "Title exceeds 64 characters"
+    },
+    {
+      "code": 6001,
+      "name": "UriTooLong",
+      "msg": "Content URI exceeds 200 characters"
+    },
+    {
+      "code": 6002,
+      "name": "EmptyUri",
+      "msg": "Content URI cannot be empty"
+    },
+    {
+      "code": 6003,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTitleSeed",
+      "msg": "Title seed does not match SHA-256 of title"
+    }
+  ],
+  "types": [
+    {
+      "name": "StoryNode",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "author",
+            "docs": [
+              "Wallet that created this node (creator identity)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "parent",
+            "docs": [
+              "Parent node pubkey (Pubkey::default() for root nodes)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "title",
+            "docs": [
+              "Short title for navigation / display"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "content_uri",
+            "docs": [
+              "URI pointing to full content (arweave:// or ipfs://)"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "children_count",
+            "docs": [
+              "Number of direct children branching from this node"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Unix timestamp of creation"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump seed"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
