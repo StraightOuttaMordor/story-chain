@@ -100,29 +100,44 @@ function isImageUrl(url: string): boolean {
   }
 }
 
-// --- Phantom wallet ---
-function getPhantom(): any {
+// --- Wallet detection (Phantom, Solflare, Brave, Backpack, etc.) ---
+function getSolanaWallet(): any {
   const w = window as any;
-  if (w.solana?.isPhantom) return w.solana;
+
+  // Phantom (desktop extension or mobile in-app browser)
   if (w.phantom?.solana?.isPhantom) return w.phantom.solana;
+  if (w.solana?.isPhantom) return w.solana;
+
+  // Solflare
+  if (w.solflare?.isSolflare) return w.solflare;
+
+  // Backpack
+  if (w.backpack?.isBackpack) return w.backpack;
+
+  // Brave Wallet (injects as window.solana but not isPhantom)
+  if (w.braveSolana) return w.braveSolana;
+
+  // Generic fallback — many wallets inject window.solana
+  if (w.solana) return w.solana;
+
   return null;
 }
 
 async function connectWallet() {
-  const phantom = getPhantom();
-  if (!phantom) {
-    alert("Phantom wallet not found! Install it from phantom.app");
+  const wallet = getSolanaWallet();
+  if (!wallet) {
+    alert("No Solana wallet found! Install Phantom, Solflare, or Brave Wallet.");
     return;
   }
 
   try {
-    const resp = await phantom.connect();
+    const resp = await wallet.connect();
     const pubkey = resp.publicKey;
 
     const connection = new Connection(NETWORK, "confirmed");
     provider = new AnchorProvider(
       connection,
-      phantom as any,
+      wallet as any,
       { commitment: "confirmed" }
     );
     program = new Program(idl as any, provider) as unknown as Program<StoryChain>;
@@ -402,10 +417,10 @@ imageInput.addEventListener("input", () => {
   }
 });
 
-// Auto-connect if Phantom is already authorized
+// Auto-connect if wallet is already authorized
 window.addEventListener("load", () => {
-  const phantom = getPhantom();
-  if (phantom?.isConnected) {
+  const wallet = getSolanaWallet();
+  if (wallet?.isConnected) {
     connectWallet();
   }
 });
