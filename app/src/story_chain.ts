@@ -88,6 +88,10 @@ export type StoryChain = {
           "type": "string"
         },
         {
+          "name": "imageUri",
+          "type": "string"
+        },
+        {
           "name": "titleSeed",
           "type": {
             "array": [
@@ -165,6 +169,10 @@ export type StoryChain = {
           "type": "string"
         },
         {
+          "name": "imageUri",
+          "type": "string"
+        },
+        {
           "name": "titleSeed",
           "type": {
             "array": [
@@ -204,16 +212,21 @@ export type StoryChain = {
     },
     {
       "code": 6002,
+      "name": "imageUriTooLong",
+      "msg": "Image URI exceeds 200 characters"
+    },
+    {
+      "code": 6003,
       "name": "emptyUri",
       "msg": "Content URI cannot be empty"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "overflow",
       "msg": "Arithmetic overflow"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "invalidTitleSeed",
       "msg": "Title seed does not match SHA-256 of title"
     }
@@ -249,6 +262,13 @@ export type StoryChain = {
             "name": "contentUri",
             "docs": [
               "URI pointing to full content (arweave:// or ipfs://)"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "imageUri",
+            "docs": [
+              "URI pointing to cover/header image (optional, empty string if none)"
             ],
             "type": "string"
           },

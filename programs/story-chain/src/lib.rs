@@ -17,13 +17,14 @@ pub mod story_chain {
         ctx: Context<CreateRoot>,
         title: String,
         content_uri: String,
+        image_uri: String,
         title_seed: [u8; 32],
     ) -> Result<()> {
         require!(title.len() <= MAX_TITLE_LEN, StoryChainError::TitleTooLong);
         require!(content_uri.len() <= MAX_URI_LEN, StoryChainError::UriTooLong);
+        require!(image_uri.len() <= MAX_URI_LEN, StoryChainError::ImageUriTooLong);
         require!(!content_uri.is_empty(), StoryChainError::EmptyUri);
 
-        // Verify the title_seed matches the SHA-256 of the title
         let expected = hash(title.as_bytes()).to_bytes();
         require!(title_seed == expected, StoryChainError::InvalidTitleSeed);
 
@@ -32,6 +33,7 @@ pub mod story_chain {
         node.parent = Pubkey::default();
         node.title = title;
         node.content_uri = content_uri;
+        node.image_uri = image_uri;
         node.children_count = 0;
         node.created_at = Clock::get()?.unix_timestamp;
         node.bump = ctx.bumps.story_node;
@@ -45,10 +47,12 @@ pub mod story_chain {
         ctx: Context<CreateBranch>,
         title: String,
         content_uri: String,
+        image_uri: String,
         title_seed: [u8; 32],
     ) -> Result<()> {
         require!(title.len() <= MAX_TITLE_LEN, StoryChainError::TitleTooLong);
         require!(content_uri.len() <= MAX_URI_LEN, StoryChainError::UriTooLong);
+        require!(image_uri.len() <= MAX_URI_LEN, StoryChainError::ImageUriTooLong);
         require!(!content_uri.is_empty(), StoryChainError::EmptyUri);
 
         let expected = hash(title.as_bytes()).to_bytes();
@@ -67,6 +71,7 @@ pub mod story_chain {
         node.parent = parent.key();
         node.title = title;
         node.content_uri = content_uri;
+        node.image_uri = image_uri;
         node.children_count = 0;
         node.created_at = Clock::get()?.unix_timestamp;
         node.bump = ctx.bumps.story_node;
@@ -85,12 +90,12 @@ pub mod story_chain {
 // ---------------------------------------------------------------------------
 
 #[derive(Accounts)]
-#[instruction(title: String, content_uri: String, title_seed: [u8; 32])]
+#[instruction(title: String, content_uri: String, image_uri: String, title_seed: [u8; 32])]
 pub struct CreateRoot<'info> {
     #[account(
         init,
         payer = author,
-        space = StoryNode::space(&title, &content_uri),
+        space = StoryNode::space(&title, &content_uri, &image_uri),
         seeds = [
             b"story-node",
             author.key().as_ref(),
@@ -107,12 +112,12 @@ pub struct CreateRoot<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(title: String, content_uri: String, title_seed: [u8; 32])]
+#[instruction(title: String, content_uri: String, image_uri: String, title_seed: [u8; 32])]
 pub struct CreateBranch<'info> {
     #[account(
         init,
         payer = author,
-        space = StoryNode::space(&title, &content_uri),
+        space = StoryNode::space(&title, &content_uri, &image_uri),
         seeds = [
             b"story-node",
             author.key().as_ref(),
@@ -146,6 +151,8 @@ pub struct StoryNode {
     pub title: String,
     /// URI pointing to full content (arweave:// or ipfs://)
     pub content_uri: String,
+    /// URI pointing to cover/header image (optional, empty string if none)
+    pub image_uri: String,
     /// Number of direct children branching from this node
     pub children_count: u64,
     /// Unix timestamp of creation
@@ -155,9 +162,9 @@ pub struct StoryNode {
 }
 
 impl StoryNode {
-    /// 8 (disc) + 32 (author) + 32 (parent) + 4+title + 4+uri + 8 (children) + 8 (ts) + 1 (bump)
-    pub fn space(title: &str, content_uri: &str) -> usize {
-        8 + 32 + 32 + (4 + title.len()) + (4 + content_uri.len()) + 8 + 8 + 1
+    /// 8 (disc) + 32 (author) + 32 (parent) + 4+title + 4+content_uri + 4+image_uri + 8 (children) + 8 (ts) + 1 (bump)
+    pub fn space(title: &str, content_uri: &str, image_uri: &str) -> usize {
+        8 + 32 + 32 + (4 + title.len()) + (4 + content_uri.len()) + (4 + image_uri.len()) + 8 + 8 + 1
     }
 }
 
@@ -171,6 +178,8 @@ pub enum StoryChainError {
     TitleTooLong,
     #[msg("Content URI exceeds 200 characters")]
     UriTooLong,
+    #[msg("Image URI exceeds 200 characters")]
+    ImageUriTooLong,
     #[msg("Content URI cannot be empty")]
     EmptyUri,
     #[msg("Arithmetic overflow")]

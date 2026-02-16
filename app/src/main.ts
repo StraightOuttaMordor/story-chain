@@ -14,7 +14,6 @@ import { createHash } from "crypto";
 
 // --- Config ---
 const PROGRAM_ID = new PublicKey(idl.address);
-// Devnet for production, localhost for local dev
 const NETWORK = clusterApiUrl("devnet");
 // const NETWORK = "http://localhost:8899";
 
@@ -25,6 +24,7 @@ interface StoryNodeData {
   parent: PublicKey;
   title: string;
   contentUri: string;
+  imageUri: string;
   childrenCount: number;
   createdAt: number;
 }
@@ -45,6 +45,7 @@ const parentField = document.getElementById("parent-field") as HTMLElement;
 const parentAddress = document.getElementById("parent-address") as HTMLInputElement;
 const titleInput = document.getElementById("title-input") as HTMLInputElement;
 const contentInput = document.getElementById("content-input") as HTMLTextAreaElement;
+const imageInput = document.getElementById("image-input") as HTMLInputElement;
 const charCount = document.getElementById("char-count") as HTMLSpanElement;
 const mintBtn = document.getElementById("mint-btn") as HTMLButtonElement;
 const mintStatus = document.getElementById("mint-status") as HTMLElement;
@@ -82,6 +83,23 @@ function setStatus(msg: string, type: "success" | "error" | "info") {
   mintStatus.className = `status ${type}`;
 }
 
+function escapeHtml(str: string): string {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/** Check if a string looks like a valid image URL */
+function isImageUrl(url: string): boolean {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:" || u.protocol === "ipfs:" || u.protocol === "arweave:";
+  } catch {
+    return false;
+  }
+}
+
 // --- Phantom wallet ---
 function getPhantom(): any {
   const w = window as any;
@@ -109,7 +127,6 @@ async function connectWallet() {
     );
     program = new Program(idl as any, provider) as unknown as Program<StoryChain>;
 
-    // Update UI
     connectBtn.textContent = "Connected";
     connectBtn.disabled = true;
     walletAddr.textContent = shortenAddr(pubkey.toBase58());
@@ -129,12 +146,13 @@ async function loadStories() {
 
   try {
     const accounts = await program.account.storyNode.all();
-    allNodes = accounts.map((a) => ({
+    allNodes = accounts.map((a: any) => ({
       publicKey: a.publicKey,
       author: a.account.author,
       parent: a.account.parent,
       title: a.account.title,
       contentUri: a.account.contentUri,
+      imageUri: a.account.imageUri || "",
       childrenCount: (a.account.childrenCount as BN).toNumber(),
       createdAt: (a.account.createdAt as BN).toNumber(),
     }));
@@ -167,7 +185,6 @@ function renderStoryList() {
 
   for (const root of roots) {
     html += renderNodeCard(root, true);
-    // Show direct children
     const children = branches.filter(
       (b) => b.parent.toBase58() === root.publicKey.toBase58()
     );
@@ -176,7 +193,6 @@ function renderStoryList() {
     }
   }
 
-  // Orphan branches (parent not in our loaded set — shouldn't happen but be safe)
   const shownKeys = new Set([
     ...roots.map((r) => r.publicKey.toBase58()),
     ...branches
@@ -193,7 +209,6 @@ function renderStoryList() {
 
   storiesList.innerHTML = html;
 
-  // Attach click handlers
   document.querySelectorAll(".story-node").forEach((el) => {
     el.addEventListener("click", () => {
       const pk = el.getAttribute("data-pk");
@@ -203,22 +218,24 @@ function renderStoryList() {
 }
 
 function renderNodeCard(node: StoryNodeData, isRoot: boolean): string {
+  const hasImage = isImageUrl(node.imageUri);
+  const thumbnail = hasImage
+    ? `<div class="node-thumb"><img src="${escapeHtml(node.imageUri)}" alt="" loading="lazy" /></div>`
+    : "";
+
   return `
-    <div class="story-node ${isRoot ? "root" : "branch"}" data-pk="${node.publicKey.toBase58()}">
-      <div class="node-title">${isRoot ? "📖 " : "↳ "}${escapeHtml(node.title)}</div>
-      <div class="node-meta">
-        <span class="author">by ${shortenAddr(node.author.toBase58())}</span>
-        <span class="branches">${node.childrenCount} branch${node.childrenCount !== 1 ? "es" : ""}</span>
-        <span>${formatDate(node.createdAt)}</span>
+    <div class="story-node ${isRoot ? "root" : "branch"} ${hasImage ? "has-image" : ""}" data-pk="${node.publicKey.toBase58()}">
+      ${thumbnail}
+      <div class="node-info">
+        <div class="node-title">${isRoot ? "📖 " : "↳ "}${escapeHtml(node.title)}</div>
+        <div class="node-meta">
+          <span class="author">by ${shortenAddr(node.author.toBase58())}</span>
+          <span class="branches">${node.childrenCount} branch${node.childrenCount !== 1 ? "es" : ""}</span>
+          <span>${formatDate(node.createdAt)}</span>
+        </div>
       </div>
     </div>
   `;
-}
-
-function escapeHtml(str: string): string {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
 }
 
 // --- Show node detail ---
@@ -231,12 +248,17 @@ async function showNodeDetail(pubkey: string) {
   nodeDetail.classList.remove("hidden");
 
   const isRoot = node.parent.toBase58() === PublicKey.default.toBase58();
+  const hasImage = isImageUrl(node.imageUri);
 
-  // Try to fetch content from URI (for now just show the URI)
   let bodyContent = `<em>Content stored at: ${escapeHtml(node.contentUri)}</em>`;
+
+  const imageBlock = hasImage
+    ? `<div class="detail-image"><img src="${escapeHtml(node.imageUri)}" alt="${escapeHtml(node.title)}" /></div>`
+    : "";
 
   nodeContent.innerHTML = `
     <div class="detail-title">${escapeHtml(node.title)}</div>
+    ${imageBlock}
     <div class="detail-meta">
       <div>Author: ${node.author.toBase58()}</div>
       <div>Address: ${node.publicKey.toBase58()}</div>
@@ -248,7 +270,6 @@ async function showNodeDetail(pubkey: string) {
     <button class="branch-btn" id="branch-from-btn">+ Branch from this node</button>
   `;
 
-  // Show child branches
   const children = allNodes.filter(
     (n) => n.parent.toBase58() === node.publicKey.toBase58()
   );
@@ -270,7 +291,6 @@ async function showNodeDetail(pubkey: string) {
       '<div class="empty-state">No branches yet</div>';
   }
 
-  // Wire up "branch from this" button
   document.getElementById("branch-from-btn")?.addEventListener("click", () => {
     nodeDetail.classList.add("hidden");
     mintSection.classList.remove("hidden");
@@ -288,6 +308,7 @@ async function mintNode() {
 
   const title = titleInput.value.trim();
   const content = contentInput.value.trim();
+  const imageUrl = imageInput.value.trim();
   const type = nodeType.value;
 
   if (!title) {
@@ -299,8 +320,8 @@ async function mintNode() {
     return;
   }
 
-  // For V1, store content directly as the URI (in production, upload to Arweave/IPFS first)
   const contentUri = `data:text/plain;${content}`;
+  const imageUri = imageUrl; // empty string if not provided
 
   mintBtn.disabled = true;
   setStatus("Preparing transaction...", "info");
@@ -310,14 +331,9 @@ async function mintNode() {
     const seed = titleHash(title);
 
     if (type === "root") {
-      const [storyNodePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("story-node"), authorPk.toBuffer(), seed],
-        PROGRAM_ID
-      );
-
       setStatus("Waiting for wallet approval...", "info");
       const tx = await program.methods
-        .createRoot(title, contentUri, titleSeedArg(title))
+        .createRoot(title, contentUri, imageUri, titleSeedArg(title))
         .accounts({
           author: authorPk,
         } as any)
@@ -326,19 +342,10 @@ async function mintNode() {
       setStatus(`✅ Root node minted! TX: ${shortenAddr(tx)}`, "success");
     } else {
       const parentPk = new PublicKey(parentAddress.value.trim());
-      const [branchPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("story-node"),
-          authorPk.toBuffer(),
-          parentPk.toBuffer(),
-          seed,
-        ],
-        PROGRAM_ID
-      );
 
       setStatus("Waiting for wallet approval...", "info");
       const tx = await program.methods
-        .createBranch(title, contentUri, titleSeedArg(title))
+        .createBranch(title, contentUri, imageUri, titleSeedArg(title))
         .accounts({
           parentNode: parentPk,
           author: authorPk,
@@ -348,9 +355,9 @@ async function mintNode() {
       setStatus(`✅ Branch minted! TX: ${shortenAddr(tx)}`, "success");
     }
 
-    // Refresh the list
     titleInput.value = "";
     contentInput.value = "";
+    imageInput.value = "";
     charCount.textContent = "0";
     await loadStories();
   } catch (err: any) {
@@ -380,6 +387,19 @@ nodeType.addEventListener("change", () => {
 
 titleInput.addEventListener("input", () => {
   charCount.textContent = String(titleInput.value.length);
+});
+
+// Image URL preview
+imageInput.addEventListener("input", () => {
+  const preview = document.getElementById("image-preview") as HTMLElement;
+  const url = imageInput.value.trim();
+  if (isImageUrl(url)) {
+    preview.innerHTML = `<img src="${escapeHtml(url)}" alt="Preview" />`;
+    preview.classList.remove("hidden");
+  } else {
+    preview.innerHTML = "";
+    preview.classList.add("hidden");
+  }
 });
 
 // Auto-connect if Phantom is already authorized
