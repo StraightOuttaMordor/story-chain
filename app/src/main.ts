@@ -346,26 +346,41 @@ async function mintNode() {
     const seed = titleHash(title);
 
     if (type === "root") {
+      // Derive PDA explicitly so Phantom can simulate
+      const [storyNodePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("story-node"), authorPk.toBuffer(), seed],
+        PROGRAM_ID
+      );
+
       setStatus("Waiting for wallet approval...", "info");
       const tx = await program.methods
         .createRoot(title, contentUri, imageUri, titleSeedArg(title))
-        .accounts({
+        .accountsPartial({
+          storyNode: storyNodePda,
           author: authorPk,
-        } as any)
-        .rpc();
+          systemProgram: web3.SystemProgram.programId,
+        })
+        .rpc({ skipPreflight: true });
 
       setStatus(`✅ Root node minted! TX: ${shortenAddr(tx)}`, "success");
     } else {
       const parentPk = new PublicKey(parentAddress.value.trim());
 
+      const [branchPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("story-node"), authorPk.toBuffer(), parentPk.toBuffer(), seed],
+        PROGRAM_ID
+      );
+
       setStatus("Waiting for wallet approval...", "info");
       const tx = await program.methods
         .createBranch(title, contentUri, imageUri, titleSeedArg(title))
-        .accounts({
+        .accountsPartial({
+          storyNode: branchPda,
           parentNode: parentPk,
           author: authorPk,
-        } as any)
-        .rpc();
+          systemProgram: web3.SystemProgram.programId,
+        })
+        .rpc({ skipPreflight: true });
 
       setStatus(`✅ Branch minted! TX: ${shortenAddr(tx)}`, "success");
     }
