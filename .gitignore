@@ -7,3 +7,6 @@ app/dist/
 
 # Local Netlify folder
 .netlify
+app-v2/node_modules/
+app-v2/dist/
+app-v2/.netlify/

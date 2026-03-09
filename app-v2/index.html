@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Story Chain — Branching Narratives on Solana</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>📖 Story Chain</h1>
+        <p class="subtitle">Permissionless branching narratives as NFTs on Solana</p>
+        <div id="wallet-section">
+          <button id="connect-btn">Connect Wallet</button>
+          <span id="wallet-address"></span>
+          <span id="network-badge" class="badge">devnet</span>
+        </div>
+      </header>
+
+      <main>
+        <!-- Landing: Create or Browse -->
+        <section id="landing-section">
+          <div class="action-cards">
+            <div class="action-card" id="create-story-card">
+              <h2>✍️ New Story</h2>
+              <p>Create a new story collection and mint the first chapter as an NFT</p>
+            </div>
+            <div class="action-card" id="browse-card">
+              <h2>🌲 Browse Stories</h2>
+              <p>Enter a collection address to read and branch off existing stories</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Create Story Section -->
+        <section id="create-section" class="card hidden">
+          <button class="back-btn" id="create-back-btn">← Back</button>
+          <h2>✍️ Create a New Story</h2>
+          <div class="form-group">
+            <label for="story-name">Story Name</label>
+            <input type="text" id="story-name" placeholder="The Dark Forest" maxlength="32" />
+          </div>
+          <div class="form-group">
+            <label for="first-chapter-title">First Chapter Title</label>
+            <input type="text" id="first-chapter-title" placeholder="Chapter 1: Into the Woods" maxlength="32" />
+          </div>
+          <div class="form-group">
+            <label for="first-chapter-text">Chapter Text</label>
+            <textarea id="first-chapter-text" rows="6" placeholder="You stand at the edge of a vast, dark forest..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="first-chapter-image">Cover Image URL <span class="optional">(optional)</span></label>
+            <input type="text" id="first-chapter-image" placeholder="https://example.com/image.jpg" />
+            <div id="create-image-preview" class="image-preview hidden"></div>
+          </div>
+          <button id="create-btn" class="primary">Create Story & Mint First Chapter</button>
+          <div id="create-status" class="status"></div>
+        </section>
+
+        <!-- Browse Section -->
+        <section id="browse-section" class="card hidden">
+          <button class="back-btn" id="browse-back-btn">← Back</button>
+          <h2>🌲 Browse a Story</h2>
+          <div class="form-group">
+            <label for="collection-address">Collection Address</label>
+            <input type="text" id="collection-address" placeholder="Paste collection pubkey..." />
+          </div>
+          <button id="load-story-btn" class="primary">Load Story</button>
+          <div id="browse-status" class="status"></div>
+        </section>
+
+        <!-- Story View -->
+        <section id="story-section" class="hidden">
+          <div id="story-header" class="card">
+            <button class="back-btn" id="story-back-btn">← Back</button>
+            <h2 id="story-title"></h2>
+            <p class="meta" id="story-meta"></p>
+          </div>
+
+          <!-- Current Node -->
+          <div id="current-node" class="card"></div>
+
+          <!-- Branches -->
+          <div id="branches-section">
+            <h3>Choose your path:</h3>
+            <div id="branches-list"></div>
+            <button class="branch-btn" id="add-branch-btn">+ Add a branch</button>
+          </div>
+
+          <!-- Add Branch Form -->
+          <div id="add-branch-form" class="card hidden">
+            <h3>✍️ Add a Branch</h3>
+            <div class="form-group">
+              <label for="branch-title">Branch Title</label>
+              <input type="text" id="branch-title" placeholder="Take the left path" maxlength="32" />
+            </div>
+            <div class="form-group">
+              <label for="branch-link-text">Link Text (shown on parent)</label>
+              <input type="text" id="branch-link-text" placeholder="Go left into the cave" maxlength="64" />
+            </div>
+            <div class="form-group">
+              <label for="branch-text">Chapter Text</label>
+              <textarea id="branch-text" rows="6" placeholder="You duck under the low hanging vines..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="branch-image">Image URL <span class="optional">(optional)</span></label>
+              <input type="text" id="branch-image" placeholder="https://example.com/image.jpg" />
+            </div>
+            <button id="mint-branch-btn" class="primary">Mint Branch</button>
+            <button id="cancel-branch-btn" class="secondary">Cancel</button>
+            <div id="branch-status" class="status"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>Built with Metaplex Core on Solana • NFT-powered branching narratives</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
